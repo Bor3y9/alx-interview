@@ -1,41 +1,38 @@
 #!/usr/bin/node
-/**
- * Wrapper function for request object that allows it
- * to work with async and await
- * @param   {String} url - site url
- * @returns {Promise}    - promise object that resolves
- *                         with parsed JSON response
- *                         and rejects with the request error.
- */
-function makeRequest (url) {
-    const request = require('request');
-    return new Promise((resolve, reject) => {
-      request.get(url, (error, response, body) => {
-        if (error) reject(error);
-        else resolve(JSON.parse(body));
-      });
+// Prints all characters of a Star Wars movie using the ALX Star Wars API
+
+if (process.argv.length !== 3) {
+  process.exit();
+}
+const movieID = process.argv[2];
+const url = `https://swapi-api.alx-tools.com/api/films/${movieID}`;
+const request = require('request');
+
+// Recursive function to get and print character names from a list of URLs
+function printNextCharacter (urls) {
+  // Remove first URL from list and parse it
+  const characterURL = urls.shift();
+  if (characterURL) {
+    request(characterURL, function (error, response, body) {
+      if (!error) {
+        // Parse and print the character name from the response body
+        console.log(JSON.parse(body).name);
+        // Move to next character in the list
+        printNextCharacter(urls);
+      }
     });
   }
-  
-  /**
-   * Entry point - makes requests to Star Wars API
-   * for movie info based movie ID passed as a CLI parameter.
-   * Retrieves movie character info then prints their names
-   * in order of appearance in the initial response.
-   */
-  async function main () {
-    const args = process.argv;
-  
-    if (args.length < 3) return;
-  
-    const movieUrl = 'https://swapi-api.alx-tools.com/api/films/' + args[2];
-    const movie = await makeRequest(movieUrl);
-  
-    if (movie.characters === undefined) return;
-    for (const characterUrl of movie.characters) {
-      const character = await makeRequest(characterUrl);
-      console.log(character.name);
+}
+
+// Fetches a list of character's URLs then uses a callback to print each one's name
+function printStarWarsCharacters (url) {
+  // Get list of URLs for characters in selected film
+  request(url, function (error, response, body) {
+    if (!error) {
+      // Call recursive function to fetch and print character names from URLs list
+      printNextCharacter(JSON.parse(body).characters);
     }
-  }
-  
-  main();
+  });
+}
+
+printStarWarsCharacters(url);
