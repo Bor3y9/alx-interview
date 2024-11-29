@@ -1,68 +1,72 @@
 #!/usr/bin/python3
 """
-Solution to the nqueens problem
+Module 0-nqueens
+A program that solves the N queens problem
 """
 import sys
 
+if len(sys.argv) < 2:
+    print("Usage: nqueens N")
+    sys.exit(1)
 
-def backtrack(r, n, cols, pos, neg, board):
-    """
-    backtrack function to find solution
-    """
-    if r == n:
-        res = []
-        for l in range(len(board)):
-            for k in range(len(board[l])):
-                if board[l][k] == 1:
-                    res.append([l, k])
-        print(res)
-        return
+try:
+    num = int(sys.argv[1])
+except ValueError:
+    print("N must be a number")
+    sys.exit(1)
 
-    for c in range(n):
-        if c in cols or (r + c) in pos or (r - c) in neg:
-            continue
-
-        cols.add(c)
-        pos.add(r + c)
-        neg.add(r - c)
-        board[r][c] = 1
-
-        backtrack(r+1, n, cols, pos, neg, board)
-
-        cols.remove(c)
-        pos.remove(r + c)
-        neg.remove(r - c)
-        board[r][c] = 0
+if not (num >= 4):
+    print("N must be at least 4")
+    sys.exit(1)
 
 
-def nqueens(n):
-    """
-    Solution to nqueens problem
-    Args:
-        n (int): number of queens. Must be >= 4
-    Return:
-        List of lists representing coordinates of each
-        queen for all possible solutions
-    """
-    cols = set()
-    pos_diag = set()
-    neg_diag = set()
-    board = [[0] * n for i in range(n)]
+def solveNQueens(n):
+    """Solution for n queens"""
+    col = set()  # keep track of used columns
+    pos = set()  # (r + c) keep track of used positive diagonals
+    neg = set()  # (r - c) keep track of used negative diagonals
 
-    backtrack(0, n, cols, pos_diag, neg_diag, board)
+    res = []  # final result
+
+    board = [[] for n in range(n)]  # create empy board
+
+    def backtrack(row):
+        """function for recursion"""
+        # means we've reached the last row
+        if row == n:
+            # get copy of current solution(current board)
+            copy = board.copy()
+            res.append(copy)
+            return
+
+        # for every column
+        for c in range(n):
+            # if we find that the column or diagonals are used, then skip
+            if c in col or (row + c) in pos or (row - c) in neg:
+                continue
+
+            # register found columns and diagonals
+            col.add(c)
+            pos.add(row + c)
+            neg.add(row - c)
+
+            board[row] = [row, c]
+
+            # move to next row
+            backtrack(row + 1)
+
+            # finally undo
+            col.remove(c)
+            pos.remove(row + c)
+            neg.remove(row - c)
+            board[row] = []
+
+    backtrack(0)
+
+    return res
 
 
 if __name__ == "__main__":
-    n = sys.argv
-    if len(n) != 2:
-        print("Usage: nqueens N")
-        sys.exit(1)
-    try:
-        nn = int(n[1])
-        if nn < 4:
-            print("N must be at least 4")
-            sys.exit(1)
-        nqueens(nn)
-    except ValueError:
-        print("N must be a number")
-        sys.exit(1)
+    boards = solveNQueens(num)
+    for board in boards:
+        print(board)
